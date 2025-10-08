@@ -15,6 +15,7 @@ namespace cusolver
         GPU_(int id = 0)
         {
             devID = id;
+            cudaSetDevice(devID);
             mem_start = get_gpu_memory_used();
             cudaDeviceProp deviceProp;
             cudaGetDeviceProperties(&deviceProp, devID);
@@ -75,7 +76,7 @@ namespace cusolver
         int nrow = 0; // size of row array (n + 1)
     };
 
-    void allocate_on_device(SparseMatrixData** sm_dev, int n_, int nnz_,
+    void allocate_sparse_matrix_on_device(SparseMatrixData** sm_dev, int n_, int nnz_,
         double* val_host = nullptr, int* col_host = nullptr, int* row_host = nullptr)
     {
         SparseMatrixData temp_host;
@@ -148,11 +149,12 @@ namespace cusolver
         unsigned int k;
 
         CudaReduction CR(f_dev, n, 512);
-
+        CudaLaunchSetup launch(n);
+        #define KERNEL1D launch.grid1d, launch.block1d
 
         for (k = 1; k < 1000000; k++)
         {
-            solve_jacobi_step << <1, 6 >> > (M_dev, f_dev, f0_dev, b_dev);
+            solve_jacobi_step <<<KERNEL1D >>> (M_dev, f_dev, f0_dev, b_dev);
 
             res = CR.reduce(f_dev, true);
             eps = abs(res - res0) / (res0 + 1e-5);

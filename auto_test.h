@@ -7,17 +7,22 @@
 
 void auto_test()
 {
-	// auto-test example: 
+	//  example of a full matrix
+	//	30    3    4    0    0    0
+	//	4   22    1    3    0    0
+	//	5    7   33    6    7    0
+	//	0    1    2   42    3    3
+	//	0    0    2   11   52    2
+	//	0    0    0    3    9   26
 
 	int n = 6;	// rank of a square matrix 
 	int nval = 24;	// number of non-zero elements of a matrix
 
-	// Example of a sparse matrix
+	// Compressed Sparse Row Format
 	double sparse_matrix_elements[24] = { 30, 3, 4, 4, 22, 1, 3, 5, 7, 33, 6, 7, 1, 2, 42, 3, 3, 2, 11, 52, 2, 3, 9, 26 };
 	int column[24] = { 0, 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4, 1, 2, 3, 4, 5, 2, 3, 4, 5, 3, 4, 5 };
 	int row[7] = { 0, 3, 7, 12, 17, 21, 24 };
 
-	//CuCG::SparseMatrixCuda SMC(n, nval, sparse_matrix_elements, column, row);
 
 	double f_host[6] = { 0, 0, 0, 0, 0, 0 }; //init values
 	double b_host[6] = { 1, 2, 3, 3, 2, 1 };
@@ -29,15 +34,15 @@ void auto_test()
 	cudaMemcpy(f0_dev, f_host, sizeof(double) * n, cudaMemcpyHostToDevice);
 	cudaMemcpy(f_dev, f_host, sizeof(double) * n, cudaMemcpyHostToDevice);
 	cudaMemcpy(b_dev, b_host, sizeof(double) * n, cudaMemcpyHostToDevice);
+
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	cusolver::CudaLaunchSetup launch(n);
-	#define KERNEL1D launch.grid1d, launch.block1d
-
+	
+	// your solver to test
 	cusolver::SparseMatrixData* sm_dev = nullptr;
-	cusolver::allocate_on_device(&sm_dev, n, nval, sparse_matrix_elements, column, row);
+	cusolver::allocate_sparse_matrix_on_device(&sm_dev, n, nval, sparse_matrix_elements, column, row);
 	cusolver::solve_jacobi(n, sm_dev, f_dev, f0_dev, b_dev);
+
 
 
 
