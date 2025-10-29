@@ -1,12 +1,11 @@
 #pragma once
 #include <iostream>
 #include "cuda_runtime.h"
-
-
-
+#include "cusolver.h"
 
 void auto_test()
 {
+	cusolver::GPU_ gpu(0);
 	//  example of a full matrix
 	//	30    3    4    0    0    0
 	//	4   22    1    3    0    0
@@ -54,6 +53,8 @@ void auto_test()
 	double cg[6] = { 0.1826929218e-1,	0.7636750835e-1,	0.5570467736e-1,	0.6371099009e-1,	0.2193724104e-1,	0.2351661001e-1 };
 	std::cout << "solution : ";	for (int i = 0; i < n; i++)		std::cout << cg[i] << " ";	std::cout << std::endl;
 
+
+	gpu.show_memory_usage_MB();
 	cudaFree(f_dev);
 	cudaFree(f0_dev);
 	cudaFree(b_dev);
