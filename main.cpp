@@ -1,10 +1,8 @@
-﻿#include "auto_test.h"
+﻿#include "cusolvers/auto_test.h"
 
 
 int main()
 {
-
    auto_test();
-
    return 0;
 }

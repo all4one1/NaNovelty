@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -77,19 +77,28 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="CudaReduction\CuReduction.cu" />
-    <CudaCompile Include="cusolver.cu" />
+    <CudaCompile Include="cusolvers\BiCGStab\bicgstab.cu" />
+    <CudaCompile Include="cusolvers\commontools.cu" />
     <ClCompile Include="main.cpp">
       <FileType>Document</FileType>
     </ClCompile>
+    <CudaCompile Include="cusolvers\Jacobi\jacobi.cu" />
+    <CudaCompile Include="cusolvers\BiCGStab\mathkernels.cu" />
+    <CudaCompile Include="cusolvers\BiCGStab\ReductionM.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="auto_test.h" />
-    <ClInclude Include="CudaReduction\CuReduction.h" />
-    <ClInclude Include="cusolver.h" />
+    <ClInclude Include="cusolvers\auto_test.h" />
+    <ClInclude Include="cusolvers\BiCGStab\bicgstab.h" />
+    <ClInclude Include="cusolvers\commontools.h" />
+    <ClInclude Include="cusolvers\BiCGStab\globals.h" />
+    <ClInclude Include="cusolvers\cusolvers.h" />
+    <ClInclude Include="cusolvers\Jacobi\jacobi.h" />
+    <ClInclude Include="cusolvers\BiCGStab\mathkernels.h" />
+    <ClInclude Include="cusolvers\BiCGStab\ReductionM.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

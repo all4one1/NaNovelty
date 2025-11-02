@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
 #include "cuda_runtime.h"
-#include "cusolver.h"
+#include "device_launch_parameters.h"
+#include <cuda.h>
+#include "cusolvers.h"
 
 void auto_test()
 {
@@ -40,9 +42,12 @@ void auto_test()
 	// your solver to test
 	cusolver::SparseMatrixData* sm_dev = nullptr;
 	cusolver::allocate_sparse_matrix_on_device(&sm_dev, n, nval, sparse_matrix_elements, column, row);
-	cusolver::solve_jacobi(n, sm_dev, f_dev, f0_dev, b_dev);
+	cusolver::CudaLaunchSetup launch(n);
 
-
+	
+	//cusolver::solve_jacobi(n, sm_dev, f_dev, f0_dev, b_dev);
+	cusolver::BiCGSTAB solver_cg(6, f_dev, f0_dev, b_dev, sm_dev, launch);
+	solver_cg.solve_with_graph(f_dev, f0_dev, b_dev, sm_dev); 
 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,4 +63,5 @@ void auto_test()
 	cudaFree(f_dev);
 	cudaFree(f0_dev);
 	cudaFree(b_dev);
+
 }
