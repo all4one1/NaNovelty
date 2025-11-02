@@ -1,5 +1,5 @@
 ## Clone the project 
 
 ```
-git clone --recurse-submodules https://github.com/all4one1/NaNovelty
+git clone https://github.com/all4one1/NaNovelty
 ```
