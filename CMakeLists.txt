@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
-project(NaNovelty LANGUAGES CXX CUDA)
 
+project(NaNovelty LANGUAGES CXX CUDA)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,16 +32,6 @@ include_directories(
     ${CUDAToolkit_INCLUDE_DIRS}
 )
 
-message("SOURCES:")
-foreach(source ${SOURCES})
-    message("  ${source}")
-endforeach()
-
-message("HEADERS:")
-foreach(header ${HEADERS})
-    message("  ${header}")
-endforeach()
-
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
@@ -70,7 +61,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-    $<$<CONFIG:Release>:-Xcompiler=/O2,/W3>
+    $<$<CONFIG:Release>:-Xcompiler=/O2,/W1>
 )
 
 
@@ -90,4 +81,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
    LINK_FLAGS "/SUBSYSTEM:CONSOLE"
 )
 
+
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+
+
+message("SOURCES:")
+foreach(source ${SOURCES})
+    message("  ${source}")
+endforeach()
+
+message("HEADERS:")
+foreach(header ${HEADERS})
+    message("  ${header}")
+endforeach()
