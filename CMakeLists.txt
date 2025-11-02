@@ -34,9 +34,25 @@ include_directories(
 )
 
 # Create executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+#add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
+# Выбор между executable и library
+if(BUILD_STATIC_LIB) # Not done
+    # Создаем статическую библиотеку
+    add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
+    message(STATUS "Building as STATIC library")
+else()
+    # Создаем исполняемый файл
+    add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+    message(STATUS "Building as EXECUTABLE")
+endif()
 
+# Для библиотеки добавляем только cudart, для executable - линкуем
+if(BUILD_STATIC_LIB)
+    target_link_libraries(${PROJECT_NAME} PUBLIC CUDA::cudart_static)
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cudart_static)
+endif()
 
 ###############################################################################################
 message("")
@@ -85,6 +101,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 #message(STATUS "CUDA_ARCHITECTURES: ${MY_ARCH}")
 
 ###############################################################################################
+
+
 
 
 # Debug configuration
