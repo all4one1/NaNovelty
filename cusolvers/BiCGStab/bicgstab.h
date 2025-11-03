@@ -15,7 +15,7 @@ namespace cusolver
 		unsigned int N = 0, Nbytes = 0, k = 0;
 		unsigned int threads = 1, blocks = 1;
 		CuGraph graph;
-		CudaReductionM* CR;
+		CudaReductionM* CR = nullptr;
 
 		BiCGSTAB::BiCGSTAB();
 		BiCGSTAB::BiCGSTAB(unsigned int N_, double* x, double* x0, double* b,

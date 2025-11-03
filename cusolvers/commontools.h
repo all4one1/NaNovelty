@@ -33,6 +33,8 @@ namespace cusolver
         std::vector<cudaGraphNode_t> Nodes;
 
         CuGraph();
+        CuGraph(CuGraph&& other);
+        CuGraph& operator=(CuGraph&& other); 
         ~CuGraph();
 
         void add_kernel_node(unsigned int threads_per_block, unsigned int num_blocks, void* kernel, void** args,

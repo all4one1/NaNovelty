@@ -48,6 +48,7 @@ void auto_test()
 	//cusolver::solve_jacobi(n, sm_dev, f_dev, f0_dev, b_dev);
 	cusolver::BiCGSTAB solver_cg(6, f_dev, f0_dev, b_dev, sm_dev, launch);
 	solver_cg.solve_with_graph(f_dev, f0_dev, b_dev, sm_dev); 
+	//solver_cg.solve_directly(f_dev, f0_dev, b_dev, sm_dev); 
 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

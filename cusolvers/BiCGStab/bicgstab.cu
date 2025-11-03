@@ -1,13 +1,28 @@
 #include "bicgstab.h"
 #include "mathkernels.h"
 //#include "globals.h"
+#include <cooperative_groups/reduce.h>
 
 namespace cusolver
 {
 	__device__ double rs_old = 1, rs_new = 1, alpha = 1, beta = 1, buffer = 1, buffer2 = 1, omega = 1;
 	//__device__ _BICGSTAB _bicgstab{ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 	#define KERNEL(func) func<<< blocks, threads>>>
+	namespace cg = cooperative_groups;
 
+	__global__ void check()
+	{
+		printf("device: \n");
+		printf("rs_old = %f, rs_new = %f, buffer = %f \n", rs_old, rs_new, buffer);
+		printf("alpha = %f, beta = %f, omega = %f \n", alpha, beta, omega);
+	}
+	__global__ void check2(double* f, unsigned int N)
+	{
+		for (unsigned int i = 0; i < N; i++)
+		{
+			printf("%i %f \n", i, f[i]);
+		}
+	}
 	BiCGSTAB::BiCGSTAB() {};
 	BiCGSTAB::BiCGSTAB(unsigned int N_, double* x, double* x0, double* b,
 		SparseMatrixData* A, CudaLaunchSetup kernel_setting, unsigned int reduction_threads)
@@ -19,8 +34,8 @@ namespace cusolver
 
 		#define alloc_(ptr) cudaMalloc((void**)&##ptr, Nbytes);  cudaMemset(ptr, 0, Nbytes); 
 		alloc_(r); alloc_(r_hat); alloc_(p); alloc_(t); alloc_(s); alloc_(v);
-
 		CR = new CudaReductionM(N, reduction_threads);
+
 		make_graph(x, x0, b, A);
 	}
 	void BiCGSTAB::solve_directly(double* x, double* x0, double* b, SparseMatrixData* A)
@@ -40,7 +55,6 @@ namespace cusolver
 
 		auto single_iteration = [&]()
 		{
-
 			// rs_new = r_hat * r; 		// beta =  (rs_new / rs_old) * (alpha / omega)		// rs_old = rs_new
 			CR->reduce(r_hat, r, false, ExtraAction::compute_rs_new_and_beta);
 
@@ -71,7 +85,6 @@ namespace cusolver
 			KERNEL(vector_minus_vector)(r, s, t, N, KernelCoefficient::omega);
 		};
 
-
 		while (true)
 		{
 			k++;	if (k > 1000000) break;
@@ -87,15 +100,15 @@ namespace cusolver
 			}
 
 			//if (k == 20000) break;
-			if (k % 1000 == 0) std::cout << k << " " << abs(rs_host) << std::endl;
-		}
+			if (k % 1000 == 0) 	std::cout << "bicgstab: k = " << k << ", res = " << abs(rs_host) << std::endl;
 
-		//std::cout << k << " " << abs(rs_host) << std::endl;
+		}
+		std::cout << "bicgstab: k = " << k << ", res = " << abs(rs_host) << std::endl;
+
 	}
 	void BiCGSTAB::make_graph(double* x, double* x0, double* b, SparseMatrixData* A)
 	{
 		KernelCoefficient action;
-
 		// 1. rs_new = r_hat * r; 		// beta =  (rs_new / rs_old) * (alpha / omega)		// rs_old = rs_new
 		graph.add_graph_as_node(CR->make_graph(r_hat, r, false, ExtraAction::compute_rs_new_and_beta));
 
@@ -176,7 +189,7 @@ namespace cusolver
 			}
 
 			//if (k == 20000) break;
-			if (k % 1000 == 0) std::cout << k << " " << abs(rs_host) << std::endl;
+			if (k % 1000 == 0) 	std::cout << "bicgstab: k = " << k << ", res = " << abs(rs_host) << std::endl;
 		}
 		std::cout << "bicgstab: k = " << k << ", res = " << abs(rs_host) << std::endl;
 	}

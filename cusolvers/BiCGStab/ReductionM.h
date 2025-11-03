@@ -18,7 +18,8 @@ namespace cusolver
         double res = 0;
         double** arr = nullptr;
         double* second = nullptr;
-
+        bool flag_first, flag_last;
+        ExtraAction flag_action = ExtraAction::NONE;
         CudaReductionM(unsigned int N, unsigned int thr = def_threads);
         CudaReductionM();
         ~CudaReductionM();

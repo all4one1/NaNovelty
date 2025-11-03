@@ -57,14 +57,41 @@ namespace cusolver
     {
         cudaGraphCreate(&graph, 0);
     }
+    CuGraph::CuGraph(CuGraph&& other) : graph(other.graph), graphExec(other.graphExec), Nodes(std::move(other.Nodes))
+    {
+        other.graph = nullptr;
+        other.graphExec = nullptr;
+        //printf("Move constructor \n");
+    }
+    CuGraph& CuGraph::operator=(CuGraph&& other) 
+    {
+        // Move assignment operator 
+        if (this != &other) {
+            // Освобождаем текущие ресурсы
+            if (graphExec) cudaGraphExecDestroy(graphExec);
+            if (graph) cudaGraphDestroy(graph);
+
+            // Перемещаем ресурсы из other
+            graph = other.graph;
+            graphExec = other.graphExec;
+            Nodes = std::move(other.Nodes);
+
+            // Обнуляем указатели в исходном объекте
+            other.graph = nullptr;
+            other.graphExec = nullptr;
+            //printf("Move assignment operator  \n");
+        }
+        return *this;
+    }
     CuGraph::~CuGraph()
     {
-        cudaGraphExecDestroy(graphExec);
-        cudaGraphDestroy(graph);
+        if (graph) cudaGraphDestroy(graph);
+        if (graphExec) cudaGraphExecDestroy(graphExec);
         graph = nullptr;
         graphExec = nullptr;
         Nodes.clear();
     }
+   
     void CuGraph::add_kernel_node(unsigned int threads_per_block, unsigned int num_blocks, void* kernel, void** args,
         unsigned int sbytes, bool depend_on_previous)
     {
@@ -278,15 +305,13 @@ namespace cusolver
         {
             void* args[3] = { &arr[i], &N_v[i], &arr[i + 1] };        
             void* kernel;
-            if (threads == 512) for (unsigned int i = 0; i < steps; i++) kernel = reduce5abs<double, 512>;
-            if (threads == 256) for (unsigned int i = 0; i < steps; i++) kernel = reduce5abs<double, 256>;
-            if (threads == 128) for (unsigned int i = 0; i < steps; i++) kernel = reduce5abs<double, 128>;
-            if (threads == 64)  for (unsigned int i = 0; i < steps; i++) kernel = reduce5abs<double, 64>;
+            if (threads == 512) for (unsigned int i = 0; i < steps; i++) kernel = reinterpret_cast<void*>(&reduce5abs<double, 512>);
+            if (threads == 256) for (unsigned int i = 0; i < steps; i++) kernel = reinterpret_cast<void*>(&reduce5abs<double, 256>);
+            if (threads == 128) for (unsigned int i = 0; i < steps; i++) kernel = reinterpret_cast<void*>(&reduce5abs<double, 128>);
+            if (threads == 64)  for (unsigned int i = 0; i < steps; i++) kernel = reinterpret_cast<void*>(&reduce5abs<double, 64>);
 
             graph.add_kernel_node(threads, grid_v[i], kernel, args, smem);
         }
-
-
 
         if (withCopy) graph.add_copy_node(&res, res_array, sizeof(double), cudaMemcpyDeviceToHost);
 

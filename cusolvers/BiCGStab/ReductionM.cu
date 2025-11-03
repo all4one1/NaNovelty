@@ -159,7 +159,8 @@ namespace cusolver
     }
     CuGraph CudaReductionM::make_graph(double* v1, double* v2, bool withCopy, ExtraAction action)
     {
-        arr[0] = v1;	second = v2;
+        arr[0] = v1;	
+        second = v2;
         for (unsigned int i = 1; i <= steps; i++)
             arr[i] = res_array;
 
@@ -175,6 +176,8 @@ namespace cusolver
         {
             bool first = (i == 0);
             bool last = (i == steps - 1);
+            //flag_first = (i == 0);
+            //flag_last = (i == steps - 1);
             void* args[] = { &arr[i], &second, &arr[i + 1], &N_v[i], &first, &last, &action };
             graph.add_kernel_node(threads, grid_v[i], kernel, args, smem);
             //dangling pointers?
