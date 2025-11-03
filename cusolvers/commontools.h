@@ -71,16 +71,9 @@ namespace cusolver
         ~CudaReduction();
         void set_reduced_size(unsigned int N, unsigned int thr, bool doubleRead);
 
-
-        void print_check();
         double reduce(bool withCopy = true);
-        double reduce_legacy(bool withCopy = true);
         double reduce(double* device_ptr, bool withCopy = true);
         static double reduce(double* device_ptr, unsigned int N, unsigned int thr = def_threads, bool withCopy = true);
-
-        double check_on_cpu(double* device_ptr, unsigned int N);
-
-        void auto_test();
 
         CuGraph CudaReduction::make_graph(double* device_ptr, bool withCopy);
     };

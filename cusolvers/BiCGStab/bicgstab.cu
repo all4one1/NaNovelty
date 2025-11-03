@@ -38,6 +38,63 @@ namespace cusolver
 
 		make_graph(x, x0, b, A);
 	}
+
+	void BiCGSTAB::make_graph(double* x, double* x0, double* b, SparseMatrixData* A)
+	{
+		KernelCoefficient action;
+		// 1. rs_new = r_hat * r; 		// beta =  (rs_new / rs_old) * (alpha / omega)		// rs_old = rs_new
+		graph.add_graph_as_node(CR->make_graph(r_hat, r, false, ExtraAction::compute_rs_new_and_beta));
+
+		// 2. p = r + beta * ( p - omega * v)
+		{
+			action = KernelCoefficient::beta_and_omega;
+			void* args[] = { &p, &r, &p, &v, &N, &action };
+			graph.add_kernel_node(threads, blocks, vector_add_2vectors, args);
+		}
+
+		// 3. v = Ap
+		{
+			void* args[] = { &v, &A, &p, &N };
+			graph.add_kernel_node(threads, blocks, matrix_dot_vector, args);
+		}
+
+		// 4. alpha = rs_new / (r_hat * v)
+		graph.add_graph_as_node(CR->make_graph(r_hat, v, false, ExtraAction::compute_alpha));
+
+		// 5. s = r - alpha * v
+		{
+			action = KernelCoefficient::alpha;
+			void* args[] = { &s, &r, &v, &N, &action };
+			graph.add_kernel_node(threads, blocks, vector_minus_vector, args);
+		}
+
+		// 6. t = A * s
+		{
+			void* args[] = { &t, &A, &s, &N };
+			graph.add_kernel_node(threads, blocks, matrix_dot_vector, args);
+		}
+
+		// 7. omega = (t * s) / (t * t)
+		graph.add_graph_as_node(CR->make_graph(t, s, false, ExtraAction::compute_buffer));
+		graph.add_graph_as_node(CR->make_graph(t, t, false, ExtraAction::compute_omega));
+
+		// 8. x = x + alpha * p + omega * s
+		{
+			action = KernelCoefficient::alpha_and_omega;
+			void* args[] = { &x, &x, &p, &s, &N, &action };
+			graph.add_kernel_node(threads, blocks, vector_add_2vectors, args);
+		}
+
+		// 9. r = s - omega * t
+		{
+			action = KernelCoefficient::omega;
+			void* args[] = { &r, &s, &t, &N, &action };
+			graph.add_kernel_node(threads, blocks, vector_minus_vector, args);
+		}
+
+		graph.instantiate();
+	}
+
 	void BiCGSTAB::solve_directly(double* x, double* x0, double* b, SparseMatrixData* A)
 	{
 		double rs_host = 1;  k = 0;
@@ -106,61 +163,7 @@ namespace cusolver
 		std::cout << "bicgstab: k = " << k << ", res = " << abs(rs_host) << std::endl;
 
 	}
-	void BiCGSTAB::make_graph(double* x, double* x0, double* b, SparseMatrixData* A)
-	{
-		KernelCoefficient action;
-		// 1. rs_new = r_hat * r; 		// beta =  (rs_new / rs_old) * (alpha / omega)		// rs_old = rs_new
-		graph.add_graph_as_node(CR->make_graph(r_hat, r, false, ExtraAction::compute_rs_new_and_beta));
 
-		// 2. p = r + beta * ( p - omega * v)
-		{
-			action = KernelCoefficient::beta_and_omega;
-			void* args[] = { &p, &r, &p, &v, &N, &action };
-			graph.add_kernel_node(threads, blocks, vector_add_2vectors, args);
-		}
-
-		// 3. v = Ap
-		{
-			void* args[] = { &v, &A, &p, &N };
-			graph.add_kernel_node(threads, blocks, matrix_dot_vector, args);
-		}
-
-		// 4. alpha = rs_new / (r_hat * v)
-		graph.add_graph_as_node(CR->make_graph(r_hat, v, false, ExtraAction::compute_alpha));
-
-		// 5. s = r - alpha * v
-		{
-			action = KernelCoefficient::alpha;
-			void* args[] = { &s, &r, &v, &N, &action };
-			graph.add_kernel_node(threads, blocks, vector_minus_vector, args);
-		}
-
-		// 6. t = A * s
-		{
-			void* args[] = { &t, &A, &s, &N };
-			graph.add_kernel_node(threads, blocks, matrix_dot_vector, args);
-		}
-
-		// 7. omega = (t * s) / (t * t)
-		graph.add_graph_as_node(CR->make_graph(t, s, false, ExtraAction::compute_buffer));
-		graph.add_graph_as_node(CR->make_graph(t, t, false, ExtraAction::compute_omega));
-
-		// 8. x = x + alpha * p + omega * s
-		{
-			action = KernelCoefficient::alpha_and_omega;
-			void* args[] = { &x, &x, &p, &s, &N, &action };
-			graph.add_kernel_node(threads, blocks, vector_add_2vectors, args);
-		}
-
-		// 9. r = s - omega * t
-		{
-			action = KernelCoefficient::omega;
-			void* args[] = { &r, &s, &t, &N, &action };
-			graph.add_kernel_node(threads, blocks, vector_minus_vector, args);
-		}
-
-		graph.instantiate();
-	}
 	void BiCGSTAB::solve_with_graph(double* x, double* x0, double* b, SparseMatrixData* A)
 	{
 		double rs_host = 1;  k = 0;

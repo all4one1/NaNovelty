@@ -20,8 +20,8 @@ namespace cusolver
 		BiCGSTAB::BiCGSTAB();
 		BiCGSTAB::BiCGSTAB(unsigned int N_, double* x, double* x0, double* b,
 			SparseMatrixData* A, CudaLaunchSetup kernel_setting, unsigned int reduction_threads = 256);
-		void BiCGSTAB::solve_directly(double* x, double* x0, double* b, SparseMatrixData* A);
 		void BiCGSTAB::make_graph(double* x, double* x0, double* b, SparseMatrixData* A);
+		void BiCGSTAB::solve_directly(double* x, double* x0, double* b, SparseMatrixData* A);
 		void BiCGSTAB::solve_with_graph(double* x, double* x0, double* b, SparseMatrixData* A);
 	};
 }
