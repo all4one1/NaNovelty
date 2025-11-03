@@ -98,7 +98,7 @@ namespace cusolver
 	void BiCGSTAB::solve_directly(double* x, double* x0, double* b, SparseMatrixData* A)
 	{
 		double rs_host = 1;  k = 0;
-		cudaMemset(x, 0, Nbytes);
+		//cudaMemset(x, 0, Nbytes);
 
 		// r = b - Ax
 		KERNEL(vector_minus_matrix_dot_vector)(r, b, A, x, N);
@@ -167,7 +167,7 @@ namespace cusolver
 	void BiCGSTAB::solve_with_graph(double* x, double* x0, double* b, SparseMatrixData* A)
 	{
 		double rs_host = 1;  k = 0;
-		cudaMemset(x, 0, Nbytes);
+		//cudaMemset(x, 0, Nbytes);
 
 		// r = b - Ax
 		KERNEL(vector_minus_matrix_dot_vector)(r, b, A, x, N);
